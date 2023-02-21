@@ -1,0 +1,88 @@
+server:
+  port: 8080
+  shutdown: graceful
+  servlet:
+    context-path: /
+  error:
+    include-stacktrace: never
+    whitelabel:
+      enabled: false
+
+management:
+  server:
+    port: 8081
+  info:
+    git:
+      mode: "simple"
+  endpoints:
+    enabled-by-default: false
+    web:
+      exposure:
+        include: health,info
+  health:
+    defaults:
+      enabled: false
+    migration-status:
+      enabled: true
+  endpoint:
+    health:
+      show-details: ALWAYS
+      enabled: true
+      probes:
+        enabled: true
+    info:
+      enabled: true
+
+spring:
+  graphql:
+    graphiql.enabled: true
+  # R2DBC Driver config
+  r2dbc:
+    url: r2dbc:postgresql://localhost:5432/anyx
+    username: root
+    password: password
+    pool:
+      enabled: true
+      initial-size: 10
+      max-size: 100
+  # flyway for db migration
+  flyway:
+    url: jdbc:postgresql://localhost:5432/anyx?useSSL=false
+    user: root
+    password: password
+
+#change to DEBUG for investigation
+logging.level.root: INFO
+
+#config for price modifier range and point rates
+payment.rate.config:
+  CASH:
+    modifier:
+      min: 0.9
+      max: 1.00
+    points: 0.05
+  CASH_ON_DELIVERY:
+    modifier:
+      min: 1.00
+      max: 1.02
+    points: 0.05
+  VISA:
+    modifier:
+      min: 0.95
+      max: 1.00
+    points: 0.03
+  MASTERCARD:
+    modifier:
+      min: 0.95
+      max: 1.00
+    points: 0.03
+  AMEX:
+    modifier:
+      min: 0.98
+      max: 1.01
+    points: 0.02
+  JCB:
+    modifier:
+      min: 0.95
+      max: 1.00
+    points: 0.05

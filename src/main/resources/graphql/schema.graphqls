@@ -1,0 +1,45 @@
+scalar CustomLocalDateTime
+
+type Query {
+    getHourlySalesStatement(timeRange: TimeRange!) : Sales!
+}
+
+input TimeRange {
+    startDateTime: CustomLocalDateTime!
+    endDateTime: CustomLocalDateTime!
+}
+
+type Mutation {
+    makePayment(payment: Payment!) : PaymentResponse!
+}
+
+type Sales {
+    sales: [Sale]
+}
+
+type Sale {
+    datetime: CustomLocalDateTime!
+    sales: String!
+    points: Int!
+}
+
+input Payment {
+    price: String!
+    priceModifier: Float!
+    paymentMethod: PaymentMethod!
+    datetime: CustomLocalDateTime!
+}
+
+type PaymentResponse {
+    finalPrice: String!
+    points: Int!
+}
+
+enum PaymentMethod {
+    CASH,
+    CASH_ON_DELIVERY,
+    VISA,
+    MASTERCARD,
+    AMEX,
+    JCB
+}

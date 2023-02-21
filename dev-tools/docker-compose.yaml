@@ -1,0 +1,31 @@
+# this docker-compose will initialize the environment for the local development with :
+# PostgreSQL
+version: '3.5'
+networks:
+  anyx:
+services:
+  postgres:
+    image: postgres:15.2-alpine
+    container_name: postgres
+    restart: always
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=anyx
+    hostname: postgres
+    networks:
+      - anyx
+    ports:
+      - "5432:5432"
+
+  pgadmin:
+    container_name: pgadmin4
+    image: dpage/pgadmin4
+    restart: always
+    networks:
+      - anyx
+    environment:
+      PGADMIN_DEFAULT_EMAIL: root@anyx.com
+      PGADMIN_DEFAULT_PASSWORD: password
+    ports:
+      - "5050:80"
