@@ -12,7 +12,6 @@ import org.springframework.stereotype.Component
 import java.math.BigDecimal
 import java.time.format.DateTimeFormatter
 
-
 @Configuration
 class AnyXConfig() {
     @Bean
@@ -22,7 +21,9 @@ class AnyXConfig() {
         return RuntimeWiringConfigurer { wiringBuilder: RuntimeWiring.Builder ->
             wiringBuilder.scalar(
                 LocalDateTimeScalar.create(
-                    CUSTOM_LOCAL_DATE, false, DateTimeFormatter.ofPattern(DATE_FORMAT)
+                    CUSTOM_LOCAL_DATE,
+                    false,
+                    DateTimeFormatter.ofPattern(DATE_FORMAT)
                 )
             )
         }
@@ -54,4 +55,3 @@ data class PaymentRateConfig(
         }
     }
 }
-

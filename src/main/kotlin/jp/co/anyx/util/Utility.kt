@@ -4,8 +4,12 @@ import jp.co.anyx.model.Payment
 import jp.co.anyx.repository.SalesStatement
 import jp.co.anyx.request.PaymentRequest
 import jp.co.anyx.response.SaleResponse
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.math.BigDecimal
 import java.time.LocalDateTime
+
+fun Any.logger(): Logger = LoggerFactory.getLogger(this.javaClass)
 
 fun SalesStatement.toSaleResponse(): SaleResponse {
     return SaleResponse(
@@ -28,7 +32,6 @@ fun PaymentRequest.toPayment(pointRate: BigDecimal): Payment {
     } catch (e: NumberFormatException) {
         throw RuntimeException("wrong value as price")
     }
-
 }
 
 fun BigDecimal.formatForResponse(): String {

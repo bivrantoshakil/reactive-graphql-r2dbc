@@ -54,6 +54,9 @@ spring:
 #change to DEBUG for investigation
 logging.level.root: INFO
 
+#retry count on failure
+anyx.retry.count: 3
+
 #config for price modifier range and point rates
 payment.rate.config:
   CASH:

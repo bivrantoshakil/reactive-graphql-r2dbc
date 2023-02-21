@@ -6,7 +6,7 @@ import java.time.LocalDateTime
 
 data class TimeRangeRequest(
     val startDateTime: LocalDateTime,
-    val endDateTime: LocalDateTime,
+    val endDateTime: LocalDateTime
 )
 
 data class PaymentRequest(
