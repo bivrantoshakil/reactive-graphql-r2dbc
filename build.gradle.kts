@@ -42,8 +42,9 @@ dependencies {
     testImplementation("io.projectreactor:reactor-test")
     testImplementation("org.springframework.graphql:spring-graphql-test")
     testImplementation("org.amshove.kluent:kluent:1.68")
-    testImplementation("org.testcontainers:r2dbc:1.17.3")
-    testImplementation("org.testcontainers:postgresql:1.17.3")
+    testImplementation("com.ninja-squad:springmockk:3.1.1")
+    testImplementation("org.testcontainers:junit-jupiter:1.17.6")
+    testImplementation("org.testcontainers:postgresql:1.17.6")
 }
 
 tasks.withType<KotlinCompile> {
@@ -58,8 +59,6 @@ tasks.withType()
 tasks.withType<Test> {
     useJUnitPlatform()
 }
-
-tasks.ktlintFormat
 
 // install ktlint hook for pre - push code linting
 tasks.check {

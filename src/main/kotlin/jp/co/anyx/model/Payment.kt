@@ -7,9 +7,9 @@ import java.math.BigDecimal
 import java.time.LocalDateTime
 
 @Table("payments")
-class Payment(
+data class Payment(
     @Id
-    var id: Long = 0,
+    val id: Long = 0,
     val price: BigDecimal,
     val priceModifier: BigDecimal,
     val points: Int,

@@ -52,10 +52,13 @@ spring:
     password: password
 
 #change to DEBUG for investigation
-logging.level.root: INFO
+logging.level.root: DEBUG
 
 #retry count on failure
 anyx.retry.count: 3
+
+#cache ttl in seconds
+anyx.cache.ttl: 300
 
 #config for price modifier range and point rates
 payment.rate.config:

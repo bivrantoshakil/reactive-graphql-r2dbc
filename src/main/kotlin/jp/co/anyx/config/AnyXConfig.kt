@@ -15,7 +15,7 @@ import java.time.format.DateTimeFormatter
 @Configuration
 class AnyXConfig() {
     @Bean
-    fun runtimeWiringConfigurer(): RuntimeWiringConfigurer? {
+    fun runtimeWiringConfigurer(): RuntimeWiringConfigurer {
         val CUSTOM_LOCAL_DATE = "CustomLocalDateTime"
         val DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ssX"
         return RuntimeWiringConfigurer { wiringBuilder: RuntimeWiring.Builder ->

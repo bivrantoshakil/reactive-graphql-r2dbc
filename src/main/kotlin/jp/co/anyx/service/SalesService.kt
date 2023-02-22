@@ -14,15 +14,19 @@ import jp.co.anyx.util.toPayment
 import jp.co.anyx.util.toSaleResponse
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cache.annotation.Cacheable
+import org.springframework.cache.annotation.EnableCaching
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Mono
+import reactor.kotlin.core.publisher.toMono
 import java.time.Duration
 
 @Service
+@EnableCaching
 class SalesService(
     private val paymentRepository: PaymentRepository,
     private val paymentRateConfig: PaymentRateConfig,
-    @Value("\${anyx.retry.count}") private val retryCount: Long
+    @Value("\${anyx.retry.count}") private val retryCount: Long,
+    @Value("\${anyx.cache.ttl}") private val cacheTtl: Long
 ) {
 
     private val log = logger()
@@ -36,7 +40,7 @@ class SalesService(
             }
 
         return salesList.map { SalesResponse(sales = it) }
-            .cache(Duration.ofMinutes(5)) // simple cache to reduce db load, can be improved
+            .cache(Duration.ofSeconds(cacheTtl)) // simple cache to reduce db load, can be improved
             .onErrorResume {
                 log.error(
                     "Error retrieving data from db for time rang start: " +
@@ -52,20 +56,20 @@ class SalesService(
     }
 
     fun createPayment(paymentRequest: PaymentRequest): Mono<PaymentResponse> {
-        paymentRequest.validate()
-        val paymentConfig = paymentRateConfig.config[paymentRequest.paymentMethod.name]!!
-
-        val savedPayment = paymentRepository.save(paymentRequest.toPayment(pointRate = paymentConfig.points))
-            .retry(retryCount)
-            .onErrorResume {
-                log.error("Error saving payment request")
-                Mono.error(
-                    AnyXGraphQLException(
-                        "Undefined error occurred, please try again.",
-                        ErrorType.DataFetchingException
+        val paymentConfig = paymentRequest.getPaymentConfig()
+        val savedPayment = paymentConfig.flatMap { paymentConfig ->
+            paymentRepository.save(paymentRequest.toPayment(pointRate = paymentConfig.points))
+                .retry(retryCount)
+                .onErrorResume {
+                    log.error("Error saving payment request")
+                    Mono.error(
+                        AnyXGraphQLException(
+                            "Undefined error occurred, please try again.",
+                            ErrorType.DataFetchingException
+                        )
                     )
-                )
-            }
+                }
+        }
 
         return savedPayment.map { payment ->
             PaymentResponse(
@@ -75,12 +79,17 @@ class SalesService(
         }
     }
 
-    private fun PaymentRequest.validate() {
+    private fun PaymentRequest.getPaymentConfig(): Mono<PaymentRateConfig.PaymentConfig> {
         // Requested payment method should be present in config file, otherwise invalid.
         val paymentConfig = paymentRateConfig.config[this.paymentMethod.name]
             ?: run {
                 log.error("Invalid payment method in request")
-                throw AnyXGraphQLException("Invalid payment method", ErrorType.ValidationError)
+                return Mono.error(
+                    AnyXGraphQLException(
+                        "Invalid payment method in request or invalid config",
+                        ErrorType.ValidationError
+                    )
+                )
             }
 
         // price modifier should be within range of min and max
@@ -89,7 +98,9 @@ class SalesService(
                 "priceModifier can not be less than ${paymentConfig.modifier.min} and more " +
                     "than ${paymentConfig.modifier.max}"
             )
-            throw AnyXGraphQLException("Invalid price modifier", ErrorType.ValidationError)
+            return Mono.error(AnyXGraphQLException("Invalid price modifier", ErrorType.ValidationError))
         }
+
+        return paymentConfig.toMono()
     }
 }
