@@ -1,6 +1,7 @@
 package jp.co.anyx.repository
 
 import jp.co.anyx.constant.PaymentMethod
+import jp.co.anyx.constant.SalesStatementInterval
 import jp.co.anyx.model.Payment
 import org.amshove.kluent.shouldBeEqualTo
 import org.junit.jupiter.api.Assertions
@@ -95,14 +96,44 @@ class PaymentRepositoryTest {
 
         StepVerifier
             .create(
-                repository.findHourlySalesStatement(
+                repository.findSalesStatementGroupedByInterval(
                     testPayment.dateTime.minusMinutes(1),
-                    testPayment.dateTime.plusMinutes(1)
+                    testPayment.dateTime.plusMinutes(1),
+                    SalesStatementInterval.HOURLY.toString()
                 )
             )
             .consumeNextWith {
                 it.points shouldBeEqualTo testPayment.points * 2
                 it.price shouldBeEqualTo testPayment.price * 2.toBigDecimal()
+            }
+            .verifyComplete()
+    }
+
+    @Test
+    fun `test daily sales report is generated successfully`() {
+        // prepare test data
+        val testDataDay1 = testPayment
+        val testDataDay2 = testPayment.copy(dateTime = testPayment.dateTime.plusDays(1))
+        repository.saveAll(listOf(testDataDay1, testDataDay2))
+            .blockLast(Duration.ofSeconds(5))
+
+        StepVerifier
+            .create(
+                repository.findSalesStatementGroupedByInterval(
+                    testDataDay1.dateTime.minusDays(1),
+                    testDataDay2.dateTime.plusDays(1),
+                    SalesStatementInterval.DAILY.toString()
+                )
+            )
+            .consumeNextWith {
+                it.points shouldBeEqualTo testDataDay1.points
+                it.price shouldBeEqualTo testDataDay1.price
+                it.datetime.dayOfMonth shouldBeEqualTo testDataDay1.dateTime.dayOfMonth
+            }
+            .consumeNextWith {
+                it.points shouldBeEqualTo testDataDay2.points
+                it.price shouldBeEqualTo testDataDay2.price
+                it.datetime.dayOfMonth shouldBeEqualTo testDataDay2.dateTime.dayOfMonth
             }
             .verifyComplete()
     }

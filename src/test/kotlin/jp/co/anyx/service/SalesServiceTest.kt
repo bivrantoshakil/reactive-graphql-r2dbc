@@ -34,7 +34,7 @@ class SalesServiceTest {
     private val retryCount: Long = 2
     private val cacheTtl: Long = 300
 
-    private val salesService = SalesService(paymentRepository, paymentRateConfig, retryCount, cacheTtl)
+    private val salesService = SalesServiceImpl(paymentRepository, paymentRateConfig, retryCount, cacheTtl)
 
     @Test
     fun `should return payment response with valid request`() {
@@ -139,7 +139,13 @@ class SalesServiceTest {
     @Test
     fun `should return hourly sales sales statement with valid request`() {
         // mock repository
-        every { paymentRepository.findHourlySalesStatement(any(), any()) } returns SalesStatement(
+        every {
+            paymentRepository.findSalesStatementGroupedByInterval(
+                any(),
+                any(),
+                any()
+            )
+        } returns SalesStatement(
             price = 100.toBigDecimal(),
             points = 10,
             datetime = LocalDateTime.now()
@@ -165,7 +171,8 @@ class SalesServiceTest {
     fun `should return error when read db operation fails`() {
         // mock repository
         every {
-            paymentRepository.findHourlySalesStatement(
+            paymentRepository.findSalesStatementGroupedByInterval(
+                any(),
                 any(),
                 any()
             )

@@ -3,6 +3,7 @@ package jp.co.anyx.util
 import jp.co.anyx.model.Payment
 import jp.co.anyx.repository.SalesStatement
 import jp.co.anyx.request.PaymentRequest
+import jp.co.anyx.response.PaymentResponse
 import jp.co.anyx.response.SaleResponse
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -27,6 +28,13 @@ fun PaymentRequest.toPayment(pointRate: BigDecimal): Payment {
         points = (this.price.toBigDecimal() * pointRate).toInt(),
         dateTime = this.datetime,
         createdAt = LocalDateTime.now()
+    )
+}
+
+fun Payment.toPaymentResponse(): PaymentResponse {
+    return PaymentResponse(
+        finalPrice = this.price.formatForResponse(),
+        points = this.points
     )
 }
 

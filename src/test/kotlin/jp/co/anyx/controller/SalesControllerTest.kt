@@ -9,7 +9,7 @@ import jp.co.anyx.exception.AnyXGraphQLException
 import jp.co.anyx.response.PaymentResponse
 import jp.co.anyx.response.SaleResponse
 import jp.co.anyx.response.SalesResponse
-import jp.co.anyx.service.SalesService
+import jp.co.anyx.service.SalesServiceImpl
 import org.flywaydb.core.Flyway
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -26,7 +26,7 @@ import java.time.LocalDateTime
 @ExtendWith(MockKExtension::class)
 class SalesControllerTest {
     @MockkBean
-    private lateinit var salesService: SalesService
+    private lateinit var salesService: SalesServiceImpl
 
     @MockkBean
     private lateinit var flyway: Flyway

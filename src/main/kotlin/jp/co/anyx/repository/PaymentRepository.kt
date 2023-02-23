@@ -13,13 +13,13 @@ interface PaymentRepository : ReactiveCrudRepository<Payment, Long> {
 
     @Query(
         """
-            SELECT SUM(price) as price, SUM(points) as points, DATE_TRUNC('hour', date_time) as datetime 
+            SELECT SUM(price) as price, SUM(points) as points, DATE_TRUNC(:interval, date_time) as datetime 
             FROM payments 
             WHERE date_time >= :startDateTime AND date_time <= :endDateTime
-            GROUP BY DATE_TRUNC('hour', date_time);
+            GROUP BY DATE_TRUNC(:interval, date_time);
         """
     )
-    fun findHourlySalesStatement(startDateTime: LocalDateTime, endDateTime: LocalDateTime): Flux<SalesStatement>
+    fun findSalesStatementGroupedByInterval(startDateTime: LocalDateTime, endDateTime: LocalDateTime, interval: String): Flux<SalesStatement>
 }
 
 data class SalesStatement(
