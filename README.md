@@ -1,6 +1,7 @@
 # anyx
-
-This project is a Kotlin-based reactive spring boot graphql application that provides simple interfaces to make payments and also see sales statements on hourly interval 
+This project is a Kotlin-based graphql application that provides simple interfaces to make payments
+and also see sales statements on hourly interval. It uses Spring Webflux reactive web framework and
+Postgresql for persistence.  
 
 ## Prerequisites
 
@@ -24,10 +25,17 @@ Before starting, you must have the following installed:
     $ ./gradlew clean build
     $ ./gradlew bootRun
     ```
+5. There is a web based Postgresql client already added in the docker-compose file which can be used from 
+[here](http://localhost:5050/browser/). Use this credential to login
+   ```python
+   Email Address: root@anyx.com
+   Password: password  
+   ```
 
 ## Usage
 ### GraphQL Queries
-There is a web interface already available provided by graphql to execute graphql queries. Open your preferred browser and open [this url](http://localhost:8080/graphiql?path=/graphql)
+There is a web interface already available provided by graphql to execute graphql queries. Open your preferred
+browser and open [this url](http://localhost:8080/graphiql?path=/graphql)
 
 #### Make Payment
 ```python
