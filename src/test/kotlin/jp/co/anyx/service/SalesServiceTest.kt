@@ -5,11 +5,16 @@ import io.mockk.mockk
 import jp.co.anyx.config.PaymentRateConfig
 import jp.co.anyx.constant.PaymentMethod
 import jp.co.anyx.exception.AnyXGraphQLException
-import jp.co.anyx.model.Payment
 import jp.co.anyx.repository.PaymentRepository
+import jp.co.anyx.repository.SalesStatement
 import jp.co.anyx.request.PaymentRequest
+import jp.co.anyx.request.TimeRangeRequest
+import jp.co.anyx.util.toPayment
 import org.amshove.kluent.shouldBeEqualTo
 import org.junit.jupiter.api.Test
+import reactor.core.publisher.Flux
+import reactor.core.publisher.Mono
+import reactor.kotlin.core.publisher.toFlux
 import reactor.kotlin.core.publisher.toMono
 import reactor.test.StepVerifier
 import java.time.LocalDateTime
@@ -41,22 +46,15 @@ class SalesServiceTest {
             datetime = LocalDateTime.now()
         )
 
-        val testPaymentRequest = Payment(
-            price = 100.toBigDecimal(),
-            priceModifier = 0.95.toBigDecimal(),
-            points = 5,
-            paymentMethod = PaymentMethod.JCB,
-            dateTime = LocalDateTime.now(),
-            createdAt = LocalDateTime.now()
-        )
+        val payment = paymentRequest.toPayment(paymentConfig.points)
 
         // mock repository
-        every { paymentRepository.save(any()) } returns testPaymentRequest.toMono()
+        every { paymentRepository.save(any()) } returns payment.toMono()
 
         StepVerifier
             .create(salesService.createPayment(paymentRequest))
             .consumeNextWith {
-                it.finalPrice shouldBeEqualTo "100.00"
+                it.finalPrice shouldBeEqualTo "95.00"
                 it.points shouldBeEqualTo 5
             }
             .verifyComplete()
@@ -75,7 +73,8 @@ class SalesServiceTest {
         StepVerifier
             .create(salesService.createPayment(paymentRequest))
             .expectErrorMatches {
-                it is AnyXGraphQLException && it.message == "Invalid price modifier"
+                it is AnyXGraphQLException && it.message == "priceModifier can not be less than ${paymentConfig.modifier.min} and more " +
+                    "than ${paymentConfig.modifier.max}"
             }
             .verify()
     }
@@ -93,7 +92,8 @@ class SalesServiceTest {
         StepVerifier
             .create(salesService.createPayment(paymentRequest))
             .expectErrorMatches {
-                it is AnyXGraphQLException && it.message == "Invalid price modifier"
+                it is AnyXGraphQLException && it.message == "priceModifier can not be less than ${paymentConfig.modifier.min} and more " +
+                    "than ${paymentConfig.modifier.max}"
             }
             .verify()
     }
@@ -112,6 +112,76 @@ class SalesServiceTest {
             .create(salesService.createPayment(paymentRequest))
             .expectErrorMatches {
                 it is AnyXGraphQLException && it.message == "Invalid payment method in request or invalid config"
+            }
+            .verify()
+    }
+
+    @Test
+    fun `should return error when save db operation fails`() {
+        // test data preparation
+        val paymentRequest = PaymentRequest(
+            price = "100",
+            priceModifier = 0.95.toBigDecimal(),
+            paymentMethod = PaymentMethod.JCB,
+            datetime = LocalDateTime.now()
+        )
+
+        every { paymentRepository.save(any()) } returns Mono.error(RuntimeException("DB connection failed"))
+
+        StepVerifier
+            .create(salesService.createPayment(paymentRequest))
+            .expectErrorMatches {
+                it is AnyXGraphQLException && it.message == "Undefined error occurred, please try again."
+            }
+            .verify()
+    }
+
+    @Test
+    fun `should return hourly sales sales statement with valid request`() {
+        // mock repository
+        every { paymentRepository.findHourlySalesStatement(any(), any()) } returns SalesStatement(
+            price = 100.toBigDecimal(),
+            points = 10,
+            datetime = LocalDateTime.now()
+        ).toMono().toFlux()
+
+        StepVerifier
+            .create(
+                salesService.getHourlySalesStatement(
+                    TimeRangeRequest(
+                        LocalDateTime.now().minusMinutes(1),
+                        LocalDateTime.now().plusMinutes(1)
+                    )
+                )
+            )
+            .consumeNextWith {
+                it.sales.size shouldBeEqualTo 1
+                it.sales[0].sales shouldBeEqualTo "100.00"
+            }
+            .verifyComplete()
+    }
+
+    @Test
+    fun `should return error when read db operation fails`() {
+        // mock repository
+        every {
+            paymentRepository.findHourlySalesStatement(
+                any(),
+                any()
+            )
+        } returns Flux.error(RuntimeException("DB connection failed"))
+
+        StepVerifier
+            .create(
+                salesService.getHourlySalesStatement(
+                    TimeRangeRequest(
+                        LocalDateTime.now().minusMinutes(1),
+                        LocalDateTime.now().plusMinutes(1)
+                    )
+                )
+            )
+            .expectErrorMatches {
+                it is AnyXGraphQLException && it.message == "Undefined error occurred, please try again."
             }
             .verify()
     }

@@ -52,7 +52,7 @@ spring:
     password: password
 
 #change to DEBUG for investigation
-logging.level.root: DEBUG
+logging.level.root: INFO
 
 #retry count on failure
 anyx.retry.count: 3

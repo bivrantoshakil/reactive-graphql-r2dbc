@@ -20,18 +20,14 @@ fun SalesStatement.toSaleResponse(): SaleResponse {
 }
 
 fun PaymentRequest.toPayment(pointRate: BigDecimal): Payment {
-    return try {
-        Payment(
-            price = this.price.toBigDecimal() * this.priceModifier,
-            priceModifier = this.priceModifier,
-            paymentMethod = this.paymentMethod,
-            points = (this.price.toBigDecimal() * pointRate).toInt(),
-            dateTime = this.datetime,
-            createdAt = LocalDateTime.now()
-        )
-    } catch (e: NumberFormatException) {
-        throw RuntimeException("wrong value as price")
-    }
+    return Payment(
+        price = this.price.toBigDecimal() * this.priceModifier,
+        priceModifier = this.priceModifier,
+        paymentMethod = this.paymentMethod,
+        points = (this.price.toBigDecimal() * pointRate).toInt(),
+        dateTime = this.datetime,
+        createdAt = LocalDateTime.now()
+    )
 }
 
 fun BigDecimal.formatForResponse(): String {

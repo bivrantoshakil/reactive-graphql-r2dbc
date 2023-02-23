@@ -56,7 +56,7 @@ class SalesService(
     }
 
     fun createPayment(paymentRequest: PaymentRequest): Mono<PaymentResponse> {
-        val paymentConfig = paymentRequest.getPaymentConfig()
+        val paymentConfig = paymentRequest.getValidPaymentConfig()
         val savedPayment = paymentConfig.flatMap { paymentConfig ->
             paymentRepository.save(paymentRequest.toPayment(pointRate = paymentConfig.points))
                 .retry(retryCount)
@@ -79,26 +79,21 @@ class SalesService(
         }
     }
 
-    private fun PaymentRequest.getPaymentConfig(): Mono<PaymentRateConfig.PaymentConfig> {
+    private fun PaymentRequest.getValidPaymentConfig(): Mono<PaymentRateConfig.PaymentConfig> {
         // Requested payment method should be present in config file, otherwise invalid.
         val paymentConfig = paymentRateConfig.config[this.paymentMethod.name]
             ?: run {
-                log.error("Invalid payment method in request")
-                return Mono.error(
-                    AnyXGraphQLException(
-                        "Invalid payment method in request or invalid config",
-                        ErrorType.ValidationError
-                    )
-                )
+                val errorMessage = "Invalid payment method in request or invalid config"
+                log.error(errorMessage)
+                return Mono.error(AnyXGraphQLException(errorMessage, ErrorType.ValidationError))
             }
 
         // price modifier should be within range of min and max
         if (this.priceModifier !in paymentConfig.modifier.min..paymentConfig.modifier.max) {
-            log.error(
-                "priceModifier can not be less than ${paymentConfig.modifier.min} and more " +
-                    "than ${paymentConfig.modifier.max}"
-            )
-            return Mono.error(AnyXGraphQLException("Invalid price modifier", ErrorType.ValidationError))
+            val errorMessage = "priceModifier can not be less than ${paymentConfig.modifier.min} and more " +
+                "than ${paymentConfig.modifier.max}"
+            log.error(errorMessage)
+            return Mono.error(AnyXGraphQLException(errorMessage, ErrorType.ValidationError))
         }
 
         return paymentConfig.toMono()
