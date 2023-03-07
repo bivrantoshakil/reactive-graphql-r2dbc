@@ -1,4 +1,4 @@
-# anyx
+# reactive-graphql-r2dbc
 This project is a Kotlin-based graphql application that provides simple interfaces to make payments
 and also see sales statements on hourly interval. It uses Spring Webflux reactive web framework and
 Postgresql for persistence.  
